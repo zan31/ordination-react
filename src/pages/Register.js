@@ -48,7 +48,7 @@ function Register({ setIsAuth }) {
   return (
     <div className="container">
       {error && (
-        <div className="alert alert-danger" role="alert">
+        <div className="alert alert-danger" role="alert" id="error">
           {error}
         </div>
       )}

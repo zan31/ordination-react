@@ -1,8 +1,8 @@
 import React from "react";
-import { auth } from "../firebase-config";
 
 function Home() {
-  return <div>Welcome home {auth.currentUser?.email}</div>;
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  return <div>Welcome home {user?.name}</div>;
 }
 
 export default Home;

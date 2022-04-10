@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { auth } from "../firebase-config";
 import { sendEmailVerification } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 function EmailVerify({ currentUser }) {
-  let setTimeActive = false;
-  const [time, setTime] = useState(60);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,13 +17,11 @@ function EmailVerify({ currentUser }) {
       .catch((err) => {
         alert(err.message);
       });
-  }, [navigate, auth.currentUser]);
+  }, [navigate]);
 
   const resendEmailVerification = () => {
     sendEmailVerification(auth.currentUser)
-      .then(() => {
-        setTimeActive = true;
-      })
+      .then(() => {})
       .catch((err) => {
         alert(err.message);
       });

@@ -1,24 +1,24 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import Post from "./pages/CreatePost";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import EmailVerify from "./pages/EmailVerify";
-import { signOut, onAuthStateChanged } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "./firebase-config";
 import "./App.css";
 
 function App() {
   const [isAuth, setIsAuth] = useState(sessionStorage.getItem("isAuth"));
-  const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-  }, []);
 
   const SignUserOut = () => {
     signOut(auth).then(() => {
@@ -27,6 +27,13 @@ function App() {
       window.location.pathname = "/login";
     });
   };
+
+  function RequireAuth({ children }) {
+    const authed = isAuth;
+    const location = useLocation();
+
+    return authed === true ? children : <Navigate to="/login" replace />;
+  }
 
   return (
     <Router>
@@ -48,11 +55,13 @@ function App() {
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link" to="/createpost">
-                  Create post
-                </Link>
-              </li>
+              {isAuth && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/createpost">
+                    Create post
+                  </Link>
+                </li>
+              )}
               {!isAuth ? (
                 <li className="nav-item">
                   <Link className="nav-link" to="/login">
@@ -83,10 +92,24 @@ function App() {
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/createpost" element={<Post />} />
+        <Route
+          path="/createpost"
+          element={
+            <RequireAuth>
+              <Post setIsAuth={setIsAuth} />
+            </RequireAuth>
+          }
+        />
         <Route path="/login" element={<Login setIsAuth={setIsAuth} />} />
         <Route path="/register" element={<Register setIsAuth={setIsAuth} />} />
-        <Route path="/verify-email" element={<EmailVerify />} />
+        <Route
+          path="/verify-email"
+          element={
+            <RequireAuth>
+              <EmailVerify />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </Router>
   );
