@@ -7,7 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-function Register({ setIsAuth }) {
+function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,7 +40,6 @@ function Register({ setIsAuth }) {
         })
         .catch((err) => setError(err.message));
     }
-    setEmail("");
     setPassword("");
     setConfirmPassword("");
   };
@@ -92,6 +91,12 @@ function Register({ setIsAuth }) {
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
+        <p>
+          Already have an account?&nbsp;
+          <a href="/login" className="link-primary">
+            Log in
+          </a>
+        </p>
         <button type="submit" className="btn btn-primary">
           Register
         </button>

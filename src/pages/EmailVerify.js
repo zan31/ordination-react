@@ -3,7 +3,7 @@ import { auth } from "../firebase-config";
 import { sendEmailVerification } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
-function EmailVerify({ currentUser }) {
+function EmailVerify() {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,27 +17,39 @@ function EmailVerify({ currentUser }) {
       .catch((err) => {
         alert(err.message);
       });
-  }, [navigate]);
+  }, [navigate, auth.currentUser]);
 
   const resendEmailVerification = () => {
+    const btn = document.getElementById("myBtn");
     sendEmailVerification(auth.currentUser)
-      .then(() => {})
+      .then(() => {
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.disabled = false;
+        }, 60000);
+      })
       .catch((err) => {
         alert(err.message);
       });
   };
 
   return (
-    <div className="center">
+    <div className="container">
       <div className="EmailVerify">
-        <h1>Verify your Email Address</h1>
+        <h1 className="display-6">Verify your Email Address</h1>
         <p>
           <strong>A Verification email has been sent to:</strong>
           <br />
           <span>{auth.currentUser?.email}</span>
         </p>
         <span>Follow the instruction in the email to verify your account</span>
-        <button onClick={resendEmailVerification}>Resend Email</button>
+        <button
+          className="btn btn-dark"
+          onClick={resendEmailVerification}
+          id="myBtn"
+        >
+          Resend Email
+        </button>
       </div>
     </div>
   );

@@ -1,56 +1,58 @@
 import React from "react";
-import { useState } from "react";
-import { auth, provider } from "../firebase-config";
+import { useState, useEffect } from "react";
+import { auth, db, provider } from "../firebase-config";
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
   sendEmailVerification,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { UserModel } from "../UserModel";
 import who from "../who.png";
+import { getDoc, doc } from "firebase/firestore";
 
-function Login({ setIsAuth }) {
-  let navigate = useNavigate();
-  const signInWithGoogle = () => {
-    signInWithPopup(auth, provider).then((result) => {
-      sessionStorage.setItem("isAuth", true);
-      const current_user = UserModel(
-        result.user.uid,
-        result.user.email,
-        result.user.emailVerified
-      );
-      sessionStorage.setItem("user", JSON.stringify(current_user));
-      setIsAuth(true);
-      navigate("/");
-    });
-  };
+function Login({ setIsAuth, setUserv, setUserd }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth.currentUser != null) {
+      navigate(-1);
+    }
+  });
+
+  const signInWithGoogle = () => {
+    signInWithPopup(auth, provider).then((result) => {
+      localStorage.setItem("isAuth", true);
+      setIsAuth(true);
+      localStorage.setItem("uid", result.user.uid);
+      localStorage.setItem("emailv", result.user.emailVerified);
+      setUserv(result.user.emailVerified);
+      navigate("/");
+    });
+  };
 
   const SignUserIn = (e) => {
     e.preventDefault();
     signInWithEmailAndPassword(auth, email, password)
       .then((result) => {
-        if (!auth.currentUser.emailVerified) {
-          sendEmailVerification(auth.currentUser)
-            .then(() => {
-              navigate("/verify-email");
-            })
-            .catch((err) => alert(err.message));
-        } else {
-          sessionStorage.setItem("isAuth", true);
-          const current_user = UserModel(
-            result.user.uid,
-            result.user.email,
-            result.user.displayName,
-            result.user.emailVerified
-          );
-          setIsAuth(true);
-          sessionStorage.setItem("user", JSON.stringify(current_user));
-          navigate("/");
-        }
+        localStorage.setItem("isAuth", true);
+        setIsAuth(true);
+        localStorage.setItem("uid", result.user.uid);
+        localStorage.setItem("emailv", result.user.emailVerified);
+        setUserv(result.user.emailVerified);
+        getDoc(doc(db, "users", result.user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            localStorage.setItem("userd", true);
+            setUserd(true);
+            navigate("/");
+          } else {
+            localStorage.setItem("userd", false);
+            setUserd(false);
+            navigate("/");
+          }
+        });
       })
       .catch((err) => setError(err.message));
   };

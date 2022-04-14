@@ -1,39 +1,50 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  useLocation,
-  Navigate,
-} from "react-router-dom";
-import Post from "./pages/CreatePost";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import EmailVerify from "./pages/EmailVerify";
-import { signOut } from "firebase/auth";
-import { auth } from "./firebase-config";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { getDoc, doc } from "firebase/firestore";
+import { auth, db } from "./firebase-config";
 import "./App.css";
+import UserData from "./pages/UserData";
+import NewVisit from "./pages/NewVisit";
+import Visits from "./pages/Visits";
 
 function App() {
-  const [isAuth, setIsAuth] = useState(sessionStorage.getItem("isAuth"));
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuth, setIsAuth] = useState(localStorage.getItem("isAuth"));
+  const [userv, setUserv] = useState(localStorage.getItem("userv"));
+  const [userd, setUserd] = useState(localStorage.getItem("userd"));
+  const [uid, setUid] = useState(localStorage.getItem("uid"));
 
-  const SignUserOut = () => {
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      const uid = user.uid;
+      getDoc(doc(db, "users", uid)).then((docSnap) => {
+        if (!docSnap.exists()) {
+          localStorage.setItem("userd", false);
+          setUserd(false);
+        } else if (docSnap.exists()) {
+          localStorage.setItem("userd", true);
+          setUserd(true);
+        }
+      });
+      setCurrentUser(user);
+      localStorage.setItem("userv", user.emailVerified);
+    });
+  }, []);
+  const signUserOut = () => {
     signOut(auth).then(() => {
-      sessionStorage.clear();
+      setUserv(null);
+      setUserd(null);
       setIsAuth(false);
+      localStorage.clear();
       window.location.pathname = "/login";
     });
   };
-
-  function RequireAuth({ children }) {
-    const authed = isAuth;
-    const location = useLocation();
-
-    return authed === true ? children : <Navigate to="/login" replace />;
-  }
 
   return (
     <Router>
@@ -55,14 +66,21 @@ function App() {
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              {isAuth && (
+              {currentUser && (
                 <li className="nav-item">
-                  <Link className="nav-link" to="/createpost">
-                    Create post
+                  <Link className="nav-link" to="/new_visit">
+                    New visit
                   </Link>
                 </li>
               )}
-              {!isAuth ? (
+              {currentUser && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/visits">
+                    Visits
+                  </Link>
+                </li>
+              )}
+              {!currentUser ? (
                 <li className="nav-item">
                   <Link className="nav-link" to="/login">
                     Login
@@ -73,13 +91,13 @@ function App() {
                   <span
                     id="logout-span"
                     className="nav-link"
-                    onClick={SignUserOut}
+                    onClick={() => signUserOut()}
                   >
                     Logout
                   </span>
                 </li>
               )}
-              {!isAuth && (
+              {!currentUser && (
                 <li className="nav-item">
                   <Link className="nav-link" to="/register">
                     Register
@@ -93,23 +111,33 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
-          path="/createpost"
-          element={
-            <RequireAuth>
-              <Post setIsAuth={setIsAuth} />
-            </RequireAuth>
-          }
+          path="/new_visit"
+          element={<NewVisit isAuth={isAuth} userv={userv} userd={userd} />}
         />
-        <Route path="/login" element={<Login setIsAuth={setIsAuth} />} />
-        <Route path="/register" element={<Register setIsAuth={setIsAuth} />} />
         <Route
-          path="/verify-email"
+          path="/user_data"
           element={
-            <RequireAuth>
-              <EmailVerify />
-            </RequireAuth>
+            <UserData
+              isAuth={isAuth}
+              userv={userv}
+              userd={userd}
+              setUserd={setUserd}
+            />
           }
         />
+        <Route
+          path="/login"
+          element={
+            <Login
+              setIsAuth={setIsAuth}
+              setUserv={setUserv}
+              setUserd={setUserd}
+            />
+          }
+        />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<EmailVerify />} />
+        <Route path="/visits" element={<Visits isAuth={isAuth} uid={uid} />} />
       </Routes>
     </Router>
   );
