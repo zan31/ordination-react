@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { addDoc, collection, getDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase-config";
+import { auth, db } from "../../firebase-config";
 
 function NewVisit({ isAuth, userv, userd }) {
   let navigate = useNavigate();
@@ -12,14 +12,17 @@ function NewVisit({ isAuth, userv, userd }) {
   const [error, setError] = useState("");
   const visitsCollectionRef = collection(db, "visits");
   const uid = localStorage.getItem("uid");
-  const newVisit = async () => {
+  const newVisit = async (event) => {
+    event.preventDefault();
     await addDoc(visitsCollectionRef, {
       user_id: uid,
       reason: text,
       date: date,
+      final: false,
       time1: time1,
       time2: time2,
       created_at: Date.now(),
+      findate: null,
     }).catch(function (error) {
       alert(error);
     });
@@ -60,7 +63,7 @@ function NewVisit({ isAuth, userv, userd }) {
 
         <div className="row">
           <h1 className="display-6">Availability</h1>
-          <div className="col">
+          <div className="col-sm">
             <div className="mb-3">
               <label htmlFor="dateconcontrol" className="form-label">
                 Date
@@ -75,7 +78,7 @@ function NewVisit({ isAuth, userv, userd }) {
               />
             </div>
           </div>
-          <div className="col">
+          <div className="col-sm">
             <div className="mb-3">
               <label htmlFor="timecontrol1" className="form-label">
                 From
@@ -90,7 +93,7 @@ function NewVisit({ isAuth, userv, userd }) {
               />
             </div>
           </div>
-          <div className="col">
+          <div className="col-sm">
             <div className="mb-3">
               <label htmlFor="time2concontrol" className="form-label">
                 To

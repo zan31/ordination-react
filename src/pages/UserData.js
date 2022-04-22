@@ -16,7 +16,7 @@ function UserData({ isAuth, userv, userd, setUserd }) {
     if (!isAuth) {
       navigate("/login");
     } else if (isAuth) {
-      if (!userv) {
+      if (!userv || !auth.currentUser.emailVerified) {
         navigate("/verify-email");
       } else if (userv) {
         if (userd) {
@@ -26,7 +26,8 @@ function UserData({ isAuth, userv, userd, setUserd }) {
     }
   }, []);
 
-  const createUser = async () => {
+  const createUser = async (event) => {
+    event.preventDefault();
     if (
       name !== "" &&
       surname !== "" &&

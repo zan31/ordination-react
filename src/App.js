@@ -10,8 +10,9 @@ import { getDoc, doc } from "firebase/firestore";
 import { auth, db } from "./firebase-config";
 import "./App.css";
 import UserData from "./pages/UserData";
-import NewVisit from "./pages/NewVisit";
-import Visits from "./pages/Visits";
+import NewVisit from "./pages/visits/NewVisit";
+import Visits from "./pages/visits/Visits";
+import VisitDetail from "./pages/visits/VisitDetail";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -19,6 +20,7 @@ function App() {
   const [userv, setUserv] = useState(localStorage.getItem("userv"));
   const [userd, setUserd] = useState(localStorage.getItem("userd"));
   const [uid, setUid] = useState(localStorage.getItem("uid"));
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -26,9 +28,11 @@ function App() {
       getDoc(doc(db, "users", uid)).then((docSnap) => {
         if (!docSnap.exists()) {
           localStorage.setItem("userd", false);
+          setRole(false);
           setUserd(false);
         } else if (docSnap.exists()) {
           localStorage.setItem("userd", true);
+          setRole(docSnap.data().role);
           setUserd(true);
         }
       });
@@ -66,19 +70,21 @@ function App() {
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              {currentUser && (
+              {role === 1 && (
                 <li className="nav-item">
                   <Link className="nav-link" to="/new_visit">
                     New visit
                   </Link>
                 </li>
               )}
-              {currentUser && (
-                <li className="nav-item">
-                  <Link className="nav-link" to="/visits">
-                    Visits
-                  </Link>
-                </li>
+              {role === 2 && (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/visits">
+                      Visits
+                    </Link>
+                  </li>
+                </>
               )}
               {!currentUser ? (
                 <li className="nav-item">
@@ -135,7 +141,14 @@ function App() {
             />
           }
         />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/register"
+          element={<Register setIsAuth={setIsAuth} setUserv={setUserv} />}
+        />
+        <Route
+          path="/visit/:id"
+          element={<VisitDetail isAuth={isAuth} uid={uid} />}
+        />
         <Route path="/verify-email" element={<EmailVerify />} />
         <Route path="/visits" element={<Visits isAuth={isAuth} uid={uid} />} />
       </Routes>

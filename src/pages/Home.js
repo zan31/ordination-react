@@ -11,7 +11,7 @@ function Home() {
     onSnapshot(colRef, (snapshot) => {
       setUserList([]);
       snapshot.docs.forEach((doc) => {
-        setUserList((prev) => [...prev, doc.data()]);
+        setUserList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
       });
     });
   }, []);
@@ -19,13 +19,13 @@ function Home() {
     <div className="homePage">
       {userLists.map((user) => {
         return (
-          <div className="post">
+          <div key={user.id} className="post">
             <div className="postHeader">
               <div className="title">
-                <h1> {user.name}</h1>
+                <h1> {user.data.name}</h1>
               </div>
             </div>
-            <div className="postTextContainer"> {user.adress} </div>
+            <div className="postTextContainer"> {user.data.adress} </div>
           </div>
         );
       })}

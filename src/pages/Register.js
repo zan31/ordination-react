@@ -7,7 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-function Register() {
+function Register({ setIsAuth, setUserv }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,6 +34,10 @@ function Register() {
         .then(() => {
           sendEmailVerification(auth.currentUser)
             .then(() => {
+              localStorage.setItem("uid", auth.currentUser.uid);
+              localStorage.setItem("isAuth", true);
+              setIsAuth(true);
+              setUserv(false);
               navigate("/verify-email");
             })
             .catch((err) => setError(err.message));

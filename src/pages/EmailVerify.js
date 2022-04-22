@@ -17,7 +17,7 @@ function EmailVerify() {
       .catch((err) => {
         alert(err.message);
       });
-  }, [navigate, auth.currentUser]);
+  }, [navigate]);
 
   const resendEmailVerification = () => {
     const btn = document.getElementById("myBtn");
