@@ -32,15 +32,11 @@ function NewVisit({ isAuth, userv, userd }) {
     if (!isAuth) {
       navigate("/login");
     } else if (isAuth) {
-      if (!userv) {
-        navigate("/verify-email");
-      } else if (userv) {
-        if (!userd) {
-          navigate("/user_data");
-        }
+      if (userd === false) {
+        navigate("/user_data");
       }
     }
-  }, []);
+  }, [auth, userd, isAuth]);
   return (
     <div className="container">
       {error && (

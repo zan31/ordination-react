@@ -13,11 +13,14 @@ import {
 import { React, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { db } from "../../firebase-config";
+import { send } from "emailjs-com";
 
 function VisitDetail({ isAuth, uid }) {
+  let { id } = useParams();
   let navigate = useNavigate();
   const [date, setDate] = useState("");
   const [visitsList, setVisitsList] = useState([]);
+  const [doctorsList, setDoctorsList] = useState([]);
   useEffect(() => {
     const q = query(
       collection(db, "visits"),
@@ -33,37 +36,90 @@ function VisitDetail({ isAuth, uid }) {
       });
     });
   }, []);
+  useEffect(() => {
+    const q = query(collection(db, "users"), where("role", "==", 3));
+    //real time update
+    onSnapshot(q, (snapshot) => {
+      setDoctorsList([]);
+      snapshot.docs.forEach((doc) => {
+        setDoctorsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+      });
+    });
+  }, []);
 
   const [visit, setVisit] = useState(null);
-  let { id } = useParams();
+  const [user, setUser] = useState(null);
+  const [doctor, setDoctor] = useState("");
+  const changeDoctor = (newDoctor) => {
+    setDoctor(newDoctor);
+  };
+  useEffect(() => {
+    getDoc(doc(db, "visits", id)).then((docSnap) => {
+      if (docSnap.exists()) {
+        setVisit({ data: docSnap.data(), id: docSnap.id });
+        getDoc(doc(db, "users", docSnap.data().user_id)).then((docSnap) => {
+          if (!docSnap.exists()) {
+            setUser(null);
+          } else if (docSnap.data()) {
+            setUser({ data: docSnap.data(), id: docSnap.id });
+          }
+        });
+      } else if (!docSnap.exists()) {
+        navigate("/visits");
+      }
+    });
+  }, []);
+
   const updateVisit = async (event) => {
     event.preventDefault();
+
     const docRef = doc(db, "visits", id);
     await updateDoc(docRef, {
       final: true,
+      doctor_id: doctor,
       findate: date,
+    }).then(() => {
+      send(
+        "ordination-react",
+        "template_qcyl2gy",
+        {
+          from_name: "the ordination team",
+          to_name: user.data.name,
+          message:
+            "Your appointment has been set to: " +
+            date +
+            ". If anything is wrong with the time plase contact us!",
+          to_email: user.data.email,
+        },
+        "dupwOtMfl4L3pbXcP"
+      );
+      navigate("/visits");
     });
-    navigate("/visits");
   };
   useEffect(() => {
     if (!isAuth) {
       navigate("/login");
     } else if (isAuth) {
-      getDoc(doc(db, "users", uid)).then((docSnap) => {
-        if (docSnap.data().role !== 2) {
-          navigate("/");
-        }
-      });
-    }
-  }, []);
-  useEffect(() => {
-    getDoc(doc(db, "visits", id)).then((docSnap) => {
-      if (docSnap.exists()) {
-        setVisit({ data: docSnap.data(), id: docSnap.id });
-      } else if (!docSnap.exists()) {
-        navigate("/visits");
+      if (uid == null) {
+        getDoc(doc(db, "users", localStorage.getItem("uid"))).then(
+          (docSnap) => {
+            if (!docSnap.exists()) {
+              navigate("/user_data");
+            } else if (docSnap.data().role !== 2) {
+              navigate("/");
+            }
+          }
+        );
+      } else {
+        getDoc(doc(db, "users", uid)).then((docSnap) => {
+          if (!docSnap.exists()) {
+            navigate("/user_data");
+          } else if (docSnap.data().role !== 2) {
+            navigate("/");
+          }
+        });
       }
-    });
+    }
   }, []);
 
   const date_to = new Date(visit?.data.created_at);
@@ -220,7 +276,11 @@ function VisitDetail({ isAuth, uid }) {
               )}
               {visit?.data.final && (
                 <h1 className="display-6">
-                  Warning this will overwrite the current appointment time!
+                  Warning this will overwrite the current appointment time:{" "}
+                  {visit?.data?.findate.split("T")[0] +
+                    " " +
+                    visit?.data?.findate.split("T")[1]}
+                  !
                 </h1>
               )}
 
@@ -237,6 +297,28 @@ function VisitDetail({ isAuth, uid }) {
                   required
                   onChange={(e) => setDate(e.target.value)}
                 />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="doctor-select" className="form-label">
+                  Select a doctor
+                </label>
+                <select
+                  onChange={(event) => changeDoctor(event.target.value)}
+                  className="form-select"
+                  aria-label="Doctors select"
+                  id="doctor-select"
+                >
+                  <option selected disabled>
+                    Set a doctor
+                  </option>
+                  {doctorsList.map((d) => {
+                    return (
+                      <option value={d.id}>
+                        dr. {d.data.surname + " " + d.data.name}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <button type="submit" className="btn btn-primary">

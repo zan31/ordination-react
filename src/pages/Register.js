@@ -3,8 +3,10 @@ import { auth } from "../firebase-config";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  signOut,
 } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import who from "../who.png";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 function Register({ setIsAuth, setUserv }) {
@@ -34,11 +36,8 @@ function Register({ setIsAuth, setUserv }) {
         .then(() => {
           sendEmailVerification(auth.currentUser)
             .then(() => {
-              localStorage.setItem("uid", auth.currentUser.uid);
-              localStorage.setItem("isAuth", true);
-              setIsAuth(true);
-              setUserv(false);
-              navigate("/verify-email");
+              signOut(auth);
+              navigate("/login?verify");
             })
             .catch((err) => setError(err.message));
         })
@@ -49,12 +48,13 @@ function Register({ setIsAuth, setUserv }) {
   };
 
   return (
-    <div className="container">
+    <div className="container wrapper">
       {error && (
         <div className="alert alert-danger" role="alert" id="error">
           {error}
         </div>
       )}
+      <img src={who} alt="Logo" className="img-fluid mx-auto d-block" />
       <form onSubmit={SignUserIn} name="registration_form">
         <div className="mb-3">
           <label htmlFor="emailcontrol" className="form-label">
@@ -97,9 +97,9 @@ function Register({ setIsAuth, setUserv }) {
         </div>
         <p>
           Already have an account?&nbsp;
-          <a href="/login" className="link-primary">
+          <Link to="/login" className="link-primary">
             Log in
-          </a>
+          </Link>
         </p>
         <button type="submit" className="btn btn-primary">
           Register

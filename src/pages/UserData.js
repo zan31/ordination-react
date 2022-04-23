@@ -8,7 +8,7 @@ function UserData({ isAuth, userv, userd, setUserd }) {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [adress, setAdress] = useState("");
-  const [disease, setDisease] = useState(null);
+  const [disease, setDisease] = useState("");
   const [date, setDate] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
@@ -16,8 +16,8 @@ function UserData({ isAuth, userv, userd, setUserd }) {
     if (!isAuth) {
       navigate("/login");
     } else if (isAuth) {
-      if (!userv || !auth.currentUser.emailVerified) {
-        navigate("/verify-email");
+      if (!userv) {
+        navigate("/");
       } else if (userv) {
         if (userd) {
           navigate(-1);
@@ -38,6 +38,7 @@ function UserData({ isAuth, userv, userd, setUserd }) {
     ) {
       await setDoc(doc(db, "users", auth.currentUser.uid), {
         uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
         name: name,
         surname: surname,
         adress: adress,

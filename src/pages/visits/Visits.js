@@ -12,8 +12,6 @@ import { React, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { db } from "../../firebase-config";
 import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal";
-import Card from "react-bootstrap/Card";
 
 function Visits({ isAuth, uid }) {
   const [visitsList, setVisitsList] = useState([]);
@@ -146,6 +144,7 @@ function Visits({ isAuth, uid }) {
       <div className="container" style={{ marginTop: "2em" }}>
         <div className="row">
           <h1 className="display-6">Unhandled visits</h1>
+
           {visitsList.map((visit) => {
             const date = new Date(visit.data.created_at);
             const visit_create = date.toLocaleString();

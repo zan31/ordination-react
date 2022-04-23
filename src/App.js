@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import EmailVerify from "./pages/EmailVerify";
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc } from "firebase/firestore";
 import { auth, db } from "./firebase-config";
@@ -37,9 +36,10 @@ function App() {
         }
       });
       setCurrentUser(user);
+      setUserv(user.emailVerified);
       localStorage.setItem("userv", user.emailVerified);
     });
-  }, []);
+  }, [userd]);
   const signUserOut = () => {
     signOut(auth).then(() => {
       setUserv(null);
@@ -76,6 +76,15 @@ function App() {
                     New visit
                   </Link>
                 </li>
+              )}
+              {!userd && (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/user_data">
+                      Set your data
+                    </Link>
+                  </li>
+                </>
               )}
               {role === 2 && (
                 <>
@@ -149,7 +158,6 @@ function App() {
           path="/visit/:id"
           element={<VisitDetail isAuth={isAuth} uid={uid} />}
         />
-        <Route path="/verify-email" element={<EmailVerify />} />
         <Route path="/visits" element={<Visits isAuth={isAuth} uid={uid} />} />
       </Routes>
     </Router>
