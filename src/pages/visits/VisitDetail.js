@@ -50,9 +50,8 @@ function VisitDetail({ isAuth, uid }) {
   const [visit, setVisit] = useState(null);
   const [user, setUser] = useState(null);
   const [doctor, setDoctor] = useState("");
-  const changeDoctor = (newDoctor) => {
-    setDoctor(newDoctor);
-  };
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     getDoc(doc(db, "visits", id)).then((docSnap) => {
       if (docSnap.exists()) {
@@ -72,29 +71,32 @@ function VisitDetail({ isAuth, uid }) {
 
   const updateVisit = async (event) => {
     event.preventDefault();
-
-    const docRef = doc(db, "visits", id);
-    await updateDoc(docRef, {
-      final: true,
-      doctor_id: doctor,
-      findate: date,
-    }).then(() => {
-      send(
-        "ordination-react",
-        "template_qcyl2gy",
-        {
-          from_name: "the ordination team",
-          to_name: user.data.name,
-          message:
-            "Your appointment has been set to: " +
-            date +
-            ". If anything is wrong with the time plase contact us!",
-          to_email: user.data.email,
-        },
-        "dupwOtMfl4L3pbXcP"
-      );
-      navigate("/visits");
-    });
+    if (doctor === "" || date === "") {
+      setError("You need to set the doctor and date");
+    } else if (doctor !== "" || date !== "") {
+      const docRef = doc(db, "visits", id);
+      await updateDoc(docRef, {
+        final: true,
+        doctor_id: doctor,
+        findate: date,
+      }).then(() => {
+        send(
+          "ordination-react",
+          "template_qcyl2gy",
+          {
+            from_name: "the ordination team",
+            to_name: user.data.name,
+            message:
+              "Your appointment has been set to: " +
+              date +
+              ". If anything is wrong with the time plase contact us!",
+            to_email: user.data.email,
+          },
+          "dupwOtMfl4L3pbXcP"
+        );
+        navigate("/visits");
+      });
+    }
   };
   useEffect(() => {
     if (!isAuth) {
@@ -124,19 +126,30 @@ function VisitDetail({ isAuth, uid }) {
 
   const date_to = new Date(visit?.data.created_at);
   const visit_create = date_to.toLocaleString();
-  const da = Date.now();
-  const da1 = new Date(da);
-  const da2 = da1.toLocaleString().split(",");
-  var newdate = da2[0].split("/").reverse().join("-");
-  var d = new Date();
-  const minutes = d.getMinutes();
-  const hour = d.getHours();
 
   const deleteVisit = async (id) => {
-    const postDoc = doc(db, "visits", id);
-    await deleteDoc(postDoc).catch(function (error) {
-      alert(error);
-    });
+    const visitDoc = doc(db, "visits", id);
+    const d = new Date(visit.data.findate).valueOf();
+    await deleteDoc(visitDoc)
+      .then(() => {
+        if (d > Date.now()) {
+          send(
+            "ordination-react",
+            "template_udvcgdk",
+            {
+              from_name: "the ordination team",
+              to_name: user.data.name,
+              message:
+                "Your upcoming appointment has been deleted, if anything seems wrong with this please contact us or create a new visit.",
+              to_email: user.data.email,
+            },
+            "dupwOtMfl4L3pbXcP"
+          );
+        }
+      })
+      .catch(function (error) {
+        alert(error);
+      });
     navigate("/visits");
   };
 
@@ -161,6 +174,19 @@ function VisitDetail({ isAuth, uid }) {
 
   return (
     <>
+      {error &&
+        (setTimeout(function () {
+          // Closing the alert
+          if (error != null) {
+            document.querySelector("#error").style.display = "none";
+            setError(null);
+          }
+        }, 5000),
+        (
+          <div className="alert alert-danger" role="alert" id="error">
+            {error}
+          </div>
+        ))}
       <div
         className="modal fade"
         id="deleteModal"
@@ -222,10 +248,8 @@ function VisitDetail({ isAuth, uid }) {
                   {visit?.data.reason}
                 </h5>
                 <p className="card-text" style={{ fontSize: "1.3em" }}>
-                  {visit?.data.date}
-                  <br />
-                  Available on {visit?.data.date} between {visit?.data.time1}{" "}
-                  and {visit?.data.time2}
+                  Available on {visit?.data.date.split("-").reverse().join("/")}{" "}
+                  between {visit?.data.time1} and {visit?.data.time2}
                 </p>
               </div>
               <div className="card-footer bg-transparent">
@@ -277,13 +301,16 @@ function VisitDetail({ isAuth, uid }) {
               {visit?.data.final && (
                 <h1 className="display-6">
                   Warning this will overwrite the current appointment time:{" "}
-                  {visit?.data?.findate.split("T")[0] +
+                  {visit?.data?.findate
+                    .split("T")[0]
+                    .split("-")
+                    .reverse()
+                    .join("/") +
                     " " +
                     visit?.data?.findate.split("T")[1]}
                   !
                 </h1>
               )}
-
               <div className="mb-3">
                 <label htmlFor="dateconcontrol" className="form-label">
                   Date
@@ -291,7 +318,8 @@ function VisitDetail({ isAuth, uid }) {
                 <input
                   className="form-control"
                   type="datetime-local"
-                  min={newdate + "T" + hour + ":" + minutes}
+                  min={visit?.data.date + "T" + visit?.data.time1}
+                  max={visit?.data.date + "T" + visit?.data.time2}
                   id="dateconcontrol"
                   value={date}
                   required
@@ -303,24 +331,23 @@ function VisitDetail({ isAuth, uid }) {
                   Select a doctor
                 </label>
                 <select
-                  onChange={(event) => changeDoctor(event.target.value)}
+                  onChange={(event) => setDoctor(event.target.value)}
                   className="form-select"
                   aria-label="Doctors select"
                   id="doctor-select"
                 >
                   <option selected disabled>
-                    Set a doctor
+                    Pick a doctor
                   </option>
                   {doctorsList.map((d) => {
                     return (
-                      <option value={d.id}>
+                      <option key={d.id} value={d.id}>
                         dr. {d.data.surname + " " + d.data.name}
                       </option>
                     );
                   })}
                 </select>
               </div>
-
               <button type="submit" className="btn btn-primary">
                 Set
               </button>

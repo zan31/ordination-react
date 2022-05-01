@@ -1,21 +1,24 @@
 import {
-  collection,
-  onSnapshot,
   getDoc,
   doc,
   where,
-  orderBy,
   query,
+  updateDoc,
+  collection,
+  onSnapshot,
+  limit,
+  orderBy,
+  deleteDoc,
 } from "firebase/firestore";
 import { React, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { db } from "../../firebase-config";
 import Button from "react-bootstrap/Button";
 
-function Visits({ isAuth, uid }) {
-  const [visitsList, setVisitsList] = useState([]);
-  const [fvisitsList, setFvisitsList] = useState([]);
+function Dvisits({ isAuth, uid }) {
   let navigate = useNavigate();
+  const [visitsList, setVisitsList] = useState([]);
+  const [NvisitsList, setNVisitsList] = useState([]);
 
   useEffect(() => {
     if (!isAuth) {
@@ -26,7 +29,7 @@ function Visits({ isAuth, uid }) {
           (docSnap) => {
             if (!docSnap.exists()) {
               navigate("/user_data");
-            } else if (docSnap.data().role !== 2) {
+            } else if (docSnap.data().role !== 3) {
               navigate("/");
             }
           }
@@ -35,7 +38,7 @@ function Visits({ isAuth, uid }) {
         getDoc(doc(db, "users", uid)).then((docSnap) => {
           if (!docSnap.exists()) {
             navigate("/user_data");
-          } else if (docSnap.data().role !== 2) {
+          } else if (docSnap.data().role !== 3) {
             navigate("/");
           }
         });
@@ -44,32 +47,67 @@ function Visits({ isAuth, uid }) {
   }, [isAuth, navigate, uid]);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "visits"),
-      where("final", "==", false),
-      orderBy("created_at", "asc")
-    );
-    //real time update
-    onSnapshot(q, (snapshot) => {
-      setVisitsList([]);
-      snapshot.docs.forEach((doc) => {
-        setVisitsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+    if (uid == null) {
+      const q = query(
+        collection(db, "visits"),
+        where("doctor_id", "==", localStorage.getItem("uid")),
+        where("verdict", "==", true),
+        orderBy("findate", "asc")
+      );
+      //real time update
+      onSnapshot(q, (snapshot) => {
+        setVisitsList([]);
+        snapshot.docs.forEach((doc) => {
+          setVisitsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+        });
       });
-    });
+    } else {
+      const q = query(
+        collection(db, "visits"),
+        where("doctor_id", "==", uid),
+        where("verdict", "==", true),
+        orderBy("findate", "asc")
+      );
+      //real time update
+      onSnapshot(q, (snapshot) => {
+        setVisitsList([]);
+        snapshot.docs.forEach((doc) => {
+          setVisitsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+        });
+      });
+    }
   }, []);
+
   useEffect(() => {
-    const q = query(
-      collection(db, "visits"),
-      where("final", "==", true),
-      orderBy("findate", "desc")
-    );
-    //real time update
-    onSnapshot(q, (snapshot) => {
-      setFvisitsList([]);
-      snapshot.docs.forEach((doc) => {
-        setFvisitsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+    if (uid == null) {
+      const q = query(
+        collection(db, "visits"),
+        where("doctor_id", "==", localStorage.getItem("uid")),
+        where("verdict", "==", false),
+        orderBy("findate", "asc")
+      );
+      //real time update
+      onSnapshot(q, (snapshot) => {
+        setNVisitsList([]);
+        snapshot.docs.forEach((doc) => {
+          setNVisitsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+        });
       });
-    });
+    } else {
+      const q = query(
+        collection(db, "visits"),
+        where("doctor_id", "==", uid),
+        where("verdict", "==", false),
+        orderBy("findate", "asc")
+      );
+      //real time update
+      onSnapshot(q, (snapshot) => {
+        setNVisitsList([]);
+        snapshot.docs.forEach((doc) => {
+          setNVisitsList((prev) => [...prev, { data: doc.data(), id: doc.id }]);
+        });
+      });
+    }
   }, []);
   const [searchValue, setSearchValue] = useState("all");
   const [patientsList, setPatientsList] = useState([]);
@@ -85,7 +123,7 @@ function Visits({ isAuth, uid }) {
   }, []);
   return (
     <>
-      <div className="container" style={{ marginTop: "2em" }}>
+      <div className="container wrapper">
         <div className="mb-3">
           <label htmlFor="patient-select" className="form-label">
             Select a patient
@@ -108,14 +146,68 @@ function Visits({ isAuth, uid }) {
             })}
           </select>
         </div>
-        <div className="row">
-          <h1 className="display-6">Unhandled visits</h1>
+        <h1 className="display-6">Visits without a conclusion</h1>
+        {NvisitsList.length === 0 && (
+          <div>
+            There are currently 0 visits with a conclusion!
+            <br />
+            Good job
+          </div>
+        )}
+        {searchValue === "all" &&
+          NvisitsList.map((visit) => {
+            const date = new Date(visit.data.created_at);
+            const visit_create = date.toLocaleString();
+            return (
+              <div
+                key={visit.id}
+                className="card mb-6"
+                style={{ marginTop: "2em" }}
+              >
+                <div className="card-header bg-transparent">idk</div>
+                <div className="card-body">
+                  <h5 className="card-title">{visit.data.reason}</h5>
+                  <p className="card-text">{visit.data.date}</p>
+                  <Link className="link-primary" to={"/visit/" + visit.id}>
+                    Details
+                  </Link>
+                </div>
+                <div className="card-footer bg-transparent">
+                  Created at {visit_create}
+                </div>
+              </div>
+            );
+          })}
+        {searchValue !== "all" &&
+          NvisitsList.filter((visit) => visit.data.user_id === searchValue).map(
+            (visit) => {
+              const date = new Date(visit.data.created_at);
+              const visit_create = date.toLocaleString();
+              return (
+                <div
+                  key={visit.id}
+                  className="card mb-6"
+                  style={{ marginTop: "2em" }}
+                >
+                  <div className="card-header bg-transparent">idk</div>
+                  <div className="card-body">
+                    <h5 className="card-title">{visit.data.reason}</h5>
+                    <p className="card-text">{visit.data.date}</p>
+                    <Link className="link-primary" to={"/visit/" + visit.id}>
+                      Details
+                    </Link>
+                  </div>
+                  <div className="card-footer bg-transparent">
+                    Created at {visit_create}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        <div className="row" style={{ marginTop: "2em" }}>
+          <h1 className="display-6">Visits with a conclusion</h1>
           {visitsList.length === 0 && (
-            <div>
-              There are currently 0 unhandled visits!
-              <br />
-              Good job
-            </div>
+            <div>There are currently 0 visits with a conclusion!</div>
           )}
           {searchValue === "all" &&
             visitsList.map((visit) => {
@@ -130,9 +222,7 @@ function Visits({ isAuth, uid }) {
                   <div className="card-header bg-transparent">idk</div>
                   <div className="card-body">
                     <h5 className="card-title">{visit.data.reason}</h5>
-                    <p className="card-text">
-                      {visit.data.date.split("-").reverse().join("/")}
-                    </p>
+                    <p className="card-text">{visit.data.date}</p>
                     <Link className="link-primary" to={"/visit/" + visit.id}>
                       Details
                     </Link>
@@ -158,97 +248,7 @@ function Visits({ isAuth, uid }) {
                     <div className="card-header bg-transparent">idk</div>
                     <div className="card-body">
                       <h5 className="card-title">{visit.data.reason}</h5>
-                      <p className="card-text">
-                        {visit.data.date.split("-").reverse().join("/")}
-                      </p>
-                      <Link className="link-primary" to={"/visit/" + visit.id}>
-                        Details
-                      </Link>
-                    </div>
-                    <div className="card-footer bg-transparent">
-                      Created at {visit_create}
-                    </div>
-                  </div>
-                );
-              })}
-        </div>
-        <div className="row" style={{ marginTop: "2em" }}>
-          <h1 className="display-6">Handled visits</h1>
-          {fvisitsList.length === 0 && (
-            <div>There are currently 0 handled visits!</div>
-          )}
-          {searchValue === "all" &&
-            fvisitsList.map((visit) => {
-              const date = new Date(visit.data.created_at);
-              const visit_create = date.toLocaleString();
-              const datefin = visit.data.findate.split("T");
-              return (
-                <div
-                  key={visit.id}
-                  className="card mb-6"
-                  style={{ marginTop: "2em" }}
-                >
-                  <div className="card-header bg-transparent">
-                    <Button
-                      variant="outline-danger"
-                      type="button"
-                      data-bs-toggle="modal"
-                      data-bs-target="#deleteModal"
-                      data-bs-uid={visit.id}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                  <div className="card-body">
-                    <h5 className="card-title">{visit.data.reason}</h5>
-                    <p className="card-text">
-                      The final date is{" "}
-                      {datefin[0].split("-").reverse().join("/") +
-                        " " +
-                        datefin[1]}
-                    </p>
-                    <Link className="link-primary" to={"/visit/" + visit.id}>
-                      Details
-                    </Link>
-                  </div>
-                  <div className="card-footer bg-transparent">
-                    Created at {visit_create}
-                  </div>
-                </div>
-              );
-            })}
-          {searchValue !== "all" &&
-            fvisitsList
-              .filter((visit) => visit.data.user_id === searchValue)
-              .map((visit) => {
-                const date = new Date(visit.data.created_at);
-                const visit_create = date.toLocaleString();
-                const datefin = visit.data.findate.split("T");
-                return (
-                  <div
-                    key={visit.id}
-                    className="card mb-6"
-                    style={{ marginTop: "2em" }}
-                  >
-                    <div className="card-header bg-transparent">
-                      <Button
-                        variant="outline-danger"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#deleteModal"
-                        data-bs-uid={visit.id}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                    <div className="card-body">
-                      <h5 className="card-title">{visit.data.reason}</h5>
-                      <p className="card-text">
-                        The final date is{" "}
-                        {datefin[0].split("-").reverse().join("/") +
-                          " " +
-                          datefin[1]}
-                      </p>
+                      <p className="card-text">{visit.data.date}</p>
                       <Link className="link-primary" to={"/visit/" + visit.id}>
                         Details
                       </Link>
@@ -265,4 +265,4 @@ function Visits({ isAuth, uid }) {
   );
 }
 
-export default Visits;
+export default Dvisits;

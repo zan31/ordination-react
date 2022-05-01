@@ -3,7 +3,7 @@ import { addDoc, collection, getDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebase-config";
 
-function NewVisit({ isAuth, userv, userd }) {
+function NewVisit({ isAuth, userd }) {
   let navigate = useNavigate();
   const [text, setText] = useState("");
   const [time1, setTime1] = useState("");
@@ -15,7 +15,7 @@ function NewVisit({ isAuth, userv, userd }) {
   const newVisit = async (event) => {
     event.preventDefault();
     await addDoc(visitsCollectionRef, {
-      user_id: uid,
+      user_id: auth.currentUser.uid || uid,
       reason: text,
       date: date,
       final: false,
@@ -23,6 +23,8 @@ function NewVisit({ isAuth, userv, userd }) {
       time2: time2,
       created_at: Date.now(),
       findate: null,
+      verdict: false,
+      verdict_id: null,
     }).catch(function (error) {
       alert(error);
     });
@@ -34,6 +36,14 @@ function NewVisit({ isAuth, userv, userd }) {
     } else if (isAuth) {
       if (userd === false) {
         navigate("/user_data");
+      } else if (userd) {
+        getDoc(doc(db, "users", uid)).then((docSnap) => {
+          if (!docSnap.exists()) {
+            navigate("/user_data");
+          } else if (docSnap.data().role !== 1) {
+            navigate(-1);
+          }
+        });
       }
     }
   }, [auth, userd, isAuth]);

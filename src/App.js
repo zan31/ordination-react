@@ -1,6 +1,12 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,6 +18,11 @@ import UserData from "./pages/UserData";
 import NewVisit from "./pages/visits/NewVisit";
 import Visits from "./pages/visits/Visits";
 import VisitDetail from "./pages/visits/VisitDetail";
+import YourVisits from "./pages/visits/YourVisits";
+import Dvisits from "./pages/doctor/Dvisits";
+import NotFoundPage from "./pages/404";
+import DvisitDetail from "./pages/doctor/DvisitDetail";
+import Dashboard from "./pages/admin/Dashboard";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -77,7 +88,14 @@ function App() {
                   </Link>
                 </li>
               )}
-              {!userd && (
+              {role === 1 && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/visits">
+                    Your visits
+                  </Link>
+                </li>
+              )}
+              {userd === false && (
                 <>
                   <li className="nav-item">
                     <Link className="nav-link" to="/user_data">
@@ -95,7 +113,26 @@ function App() {
                   </li>
                 </>
               )}
-              {!currentUser ? (
+              {role === 3 && (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/visits">
+                      Visits
+                    </Link>
+                  </li>
+                </>
+              )}
+
+              {role === 5 && (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/dashboard">
+                      Admin panel
+                    </Link>
+                  </li>
+                </>
+              )}
+              {!isAuth ? (
                 <li className="nav-item">
                   <Link className="nav-link" to="/login">
                     Login
@@ -112,7 +149,7 @@ function App() {
                   </span>
                 </li>
               )}
-              {!currentUser && (
+              {!isAuth && (
                 <li className="nav-item">
                   <Link className="nav-link" to="/register">
                     Register
@@ -124,41 +161,82 @@ function App() {
         </div>
       </nav>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/new_visit"
-          element={<NewVisit isAuth={isAuth} userv={userv} userd={userd} />}
-        />
-        <Route
-          path="/user_data"
-          element={
-            <UserData
-              isAuth={isAuth}
-              userv={userv}
-              userd={userd}
-              setUserd={setUserd}
-            />
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <Login
-              setIsAuth={setIsAuth}
-              setUserv={setUserv}
-              setUserd={setUserd}
-            />
-          }
-        />
-        <Route
-          path="/register"
-          element={<Register setIsAuth={setIsAuth} setUserv={setUserv} />}
-        />
-        <Route
-          path="/visit/:id"
-          element={<VisitDetail isAuth={isAuth} uid={uid} />}
-        />
-        <Route path="/visits" element={<Visits isAuth={isAuth} uid={uid} />} />
+        {currentUser && <Route path="/" element={<Home />} />}
+
+        {role === 1 && (
+          <Route
+            path="/new_visit"
+            element={<NewVisit isAuth={isAuth} userv={userv} userd={userd} />}
+          />
+        )}
+        {userd === false && (
+          <Route
+            path="/user_data"
+            element={
+              <UserData
+                isAuth={isAuth}
+                userv={userv}
+                userd={userd}
+                setUserd={setUserd}
+              />
+            }
+          />
+        )}
+        {!isAuth && (
+          <Route
+            path="/login"
+            element={
+              <Login
+                setIsAuth={setIsAuth}
+                setUserv={setUserv}
+                setUserd={setUserd}
+              />
+            }
+          />
+        )}
+        {!isAuth && (
+          <Route
+            path="/register"
+            element={<Register setIsAuth={setIsAuth} setUserv={setUserv} />}
+          />
+        )}
+        {role === 2 && (
+          <Route
+            path="/visit/:id"
+            element={<VisitDetail isAuth={isAuth} uid={uid} />}
+          />
+        )}
+        {role === 2 && (
+          <Route
+            path="/visits"
+            element={<Visits isAuth={isAuth} uid={uid} />}
+          />
+        )}
+        {role === 1 && (
+          <Route
+            path="/visits"
+            element={<YourVisits isAuth={isAuth} userd={userd} uid={uid} />}
+          />
+        )}
+        {role === 3 && (
+          <Route
+            path="/visits"
+            element={<Dvisits isAuth={isAuth} uid={uid} />}
+          />
+        )}
+        {role === 3 && (
+          <Route
+            path="/visit/:id"
+            element={<DvisitDetail isAuth={isAuth} uid={uid} />}
+          />
+        )}
+        {role === 5 && (
+          <Route
+            path="/dashboard"
+            element={<Dashboard isAuth={isAuth} uid={uid} />}
+          />
+        )}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );
