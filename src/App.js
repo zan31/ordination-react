@@ -95,7 +95,7 @@ function App() {
                   </Link>
                 </li>
               )}
-              {userd === false && (
+              {userd === false && userv === true && (
                 <>
                   <li className="nav-item">
                     <Link className="nav-link" to="/user_data">
@@ -169,7 +169,7 @@ function App() {
             element={<NewVisit isAuth={isAuth} userv={userv} userd={userd} />}
           />
         )}
-        {userd === false && (
+        {userv === true && userd === false && (
           <Route
             path="/user_data"
             element={

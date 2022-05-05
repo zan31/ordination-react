@@ -164,7 +164,6 @@ function Dvisits({ isAuth, uid }) {
                 className="card mb-6"
                 style={{ marginTop: "2em" }}
               >
-                <div className="card-header bg-transparent">idk</div>
                 <div className="card-body">
                   <h5 className="card-title">{visit.data.reason}</h5>
                   <p className="card-text">{visit.data.date}</p>
@@ -178,6 +177,7 @@ function Dvisits({ isAuth, uid }) {
               </div>
             );
           })}
+
         {searchValue !== "all" &&
           NvisitsList.filter((visit) => visit.data.user_id === searchValue).map(
             (visit) => {
@@ -189,7 +189,6 @@ function Dvisits({ isAuth, uid }) {
                   className="card mb-6"
                   style={{ marginTop: "2em" }}
                 >
-                  <div className="card-header bg-transparent">idk</div>
                   <div className="card-body">
                     <h5 className="card-title">{visit.data.reason}</h5>
                     <p className="card-text">{visit.data.date}</p>
@@ -219,7 +218,6 @@ function Dvisits({ isAuth, uid }) {
                   className="card mb-6"
                   style={{ marginTop: "2em" }}
                 >
-                  <div className="card-header bg-transparent">idk</div>
                   <div className="card-body">
                     <h5 className="card-title">{visit.data.reason}</h5>
                     <p className="card-text">{visit.data.date}</p>
@@ -245,7 +243,6 @@ function Dvisits({ isAuth, uid }) {
                     className="card mb-6"
                     style={{ marginTop: "2em" }}
                   >
-                    <div className="card-header bg-transparent">idk</div>
                     <div className="card-body">
                       <h5 className="card-title">{visit.data.reason}</h5>
                       <p className="card-text">{visit.data.date}</p>

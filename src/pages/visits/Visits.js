@@ -127,7 +127,6 @@ function Visits({ isAuth, uid }) {
                   className="card mb-6"
                   style={{ marginTop: "2em" }}
                 >
-                  <div className="card-header bg-transparent">idk</div>
                   <div className="card-body">
                     <h5 className="card-title">{visit.data.reason}</h5>
                     <p className="card-text">
@@ -155,7 +154,6 @@ function Visits({ isAuth, uid }) {
                     className="card mb-6"
                     style={{ marginTop: "2em" }}
                   >
-                    <div className="card-header bg-transparent">idk</div>
                     <div className="card-body">
                       <h5 className="card-title">{visit.data.reason}</h5>
                       <p className="card-text">
@@ -188,17 +186,6 @@ function Visits({ isAuth, uid }) {
                   className="card mb-6"
                   style={{ marginTop: "2em" }}
                 >
-                  <div className="card-header bg-transparent">
-                    <Button
-                      variant="outline-danger"
-                      type="button"
-                      data-bs-toggle="modal"
-                      data-bs-target="#deleteModal"
-                      data-bs-uid={visit.id}
-                    >
-                      Delete
-                    </Button>
-                  </div>
                   <div className="card-body">
                     <h5 className="card-title">{visit.data.reason}</h5>
                     <p className="card-text">
@@ -230,17 +217,6 @@ function Visits({ isAuth, uid }) {
                     className="card mb-6"
                     style={{ marginTop: "2em" }}
                   >
-                    <div className="card-header bg-transparent">
-                      <Button
-                        variant="outline-danger"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#deleteModal"
-                        data-bs-uid={visit.id}
-                      >
-                        Delete
-                      </Button>
-                    </div>
                     <div className="card-body">
                       <h5 className="card-title">{visit.data.reason}</h5>
                       <p className="card-text">
