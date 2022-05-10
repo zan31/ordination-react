@@ -161,7 +161,7 @@ function App() {
         </div>
       </nav>
       <Routes>
-        {currentUser && <Route path="/" element={<Home />} />}
+        <Route path="/" element={<Home />} />
 
         {role === 1 && (
           <Route
